@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#164e8a">
+<meta name="description" content="Bahi Khata - Daily Income and Expense Register">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Bahi Khata</title>
+<style>
+:root{--blue:#164e8a;--green:#16803c;--red:#c0392b;--bg:#f3f6fb;--ink:#172033}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--blue);color:white;padding:18px 16px 16px;text-align:center;box-shadow:0 2px 8px #0002}
+header h1{margin:0;font-size:25px;letter-spacing:.4px}header p{margin:4px 0 0;font-size:13px;opacity:.9}
+main{max-width:980px;margin:auto;padding:14px}
+.toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap;background:white;padding:12px;border-radius:14px;margin-bottom:12px;box-shadow:0 1px 5px #1720330d}
+.field{flex:1;min-width:130px}label{display:block;font-size:12px;font-weight:700;color:#526078;margin-bottom:5px}
+input,button{font:inherit}input{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:9px;background:white;color:var(--ink)}
+.columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.panel{background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 5px #1720330d}
+.panel h2{margin:0;padding:13px;text-align:center;font-size:16px}
+.income h2{background:#e2f4e7;color:var(--green)}.expense h2{background:#fce8e6;color:var(--red)}
+.entry{padding:12px;display:grid;gap:9px}.entry button{width:100%}
+button{border:0;border-radius:9px;padding:11px 13px;font-weight:700;cursor:pointer}
+.add-income{background:var(--green);color:white}.add-expense{background:var(--red);color:white}
+.records{padding:0 10px 10px;max-height:340px;overflow:auto}
+.record{display:flex;justify-content:space-between;gap:8px;padding:10px 4px;border-bottom:1px solid #edf0f4;align-items:center}
+.record small{display:block;color:#6b7280;margin-top:3px}.record strong{white-space:nowrap}
+.record .del{padding:5px 8px;background:#f1f5f9;color:#475569;margin-left:5px}
+.income .record strong{color:var(--green)}.expense .record strong{color:var(--red)}
+.empty{padding:16px 4px;color:#8290a5;text-align:center;font-size:13px}
+.summary{margin-top:13px;background:white;border-radius:14px;padding:15px;box-shadow:0 1px 5px #1720330d}
+.summary h2{font-size:16px;margin:0 0 10px}.sumrow{display:flex;justify-content:space-between;padding:6px 0;gap:10px}
+.balance{border-top:1px solid #e5eaf1;margin-top:5px;padding-top:12px;font-weight:800;font-size:18px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions button{flex:1;min-width:130px;background:#e5edf8;color:var(--blue)}
+.note{font-size:12px;color:#64748b;text-align:center;margin:12px 0 5px}
+@media(max-width:620px){main{padding:10px}.columns{grid-template-columns:1fr 1fr;gap:8px}.panel h2{font-size:14px;padding:11px 4px}.entry{padding:8px}.entry input{padding:10px 8px;font-size:14px}.entry button{padding:10px 4px;font-size:13px}.records{padding:0 7px 8px;max-height:300px}.record{font-size:12px;gap:3px}.record strong{font-size:12px}.record .del{font-size:11px;padding:4px 6px}.toolbar{gap:8px}.field{min-width:120px}}
+@media print{header{background:white;color:black;box-shadow:none}body{background:white}.toolbar,.entry,.actions,.del,.note{display:none!important}.columns{grid-template-columns:1fr 1fr}.records{max-height:none;overflow:visible}.panel,.summary{box-shadow:none;border:1px solid #ddd;break-inside:avoid}}
+</style>
+</head>
+<body>
+<header><h1>📒 BAHI KHATA</h1><p>Daily Income &amp; Expense Register</p></header>
+<main>
+  <section class="toolbar">
+    <div class="field"><label for="entryDate">ENTRY DATE</label><input id="entryDate" type="date"></div>
+    <div class="field"><label for="opening">OPENING BALANCE (₹)</label><input id="opening" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></div>
+    <button id="saveOpening" style="background:#475569;color:white">Save Opening</button>
+  </section>
+  <section class="columns">
+    <div class="panel income">
+      <h2>INCOME / DEBIT</h2>
+      <div class="entry"><input id="incomePart" placeholder="Particulars" maxlength="100"><input id="incomeAmt" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Amount ₹"><button class="add-income" id="addIncome">+ Add Income</button></div>
+      <div class="records" id="incomeRecords"></div>
+    </div>
+    <div class="panel expense">
+      <h2>EXPENSE / CREDIT</h2>
+      <div class="entry"><input id="expensePart" placeholder="Particulars" maxlength="100"><input id="expenseAmt" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Amount ₹"><button class="add-expense" id="addExpense">+ Add Expense</button></div>
+      <div class="records" id="expenseRecords"></div>
+    </div>
+  </section>
+  <section class="summary">
+    <h2>Balance Summary</h2>
+    <div class="sumrow"><span>Opening Balance</span><strong id="sOpening">₹0.00</strong></div>
+    <div class="sumrow"><span>Total Income (Debit)</span><strong id="sIncome">₹0.00</strong></div>
+    <div class="sumrow"><span>Total Expense (Credit)</span><strong id="sExpense">₹0.00</strong></div>
+    <div class="sumrow balance"><span>Closing Balance</span><strong id="sBalance">₹0.00</strong></div>
+  </section>
+  <div class="actions"><button id="print">Print Report</button><button id="csv">Download CSV</button><button id="allDates">Show All Dates</button></div>
+  <p class="note">Your entries are saved in this browser on this device. Export a CSV backup regularly.</p>
+</main>
+<script>
+const KEY='bahi-khata-v1';
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toISOString().slice(0,10);
+let state=JSON.parse(localStorage.getItem(KEY)||'{"opening":0,"entries":[]}');
+let filterDate=today();
+$('entryDate').value=today();
+$('opening').value=state.opening||'';
+const fmt=n=>'₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function add(type){
+ const part=$(type+'Part').value.trim(), amount=Number($(type+'Amt').value), date=$('entryDate').value||today();
+ if(!part||!Number.isFinite(amount)||amount<=0){alert('Please enter particulars and a valid amount.');return}
+ state.entries.push({id:Date.now()+Math.random(),date,type:type.toUpperCase(),part,amount});
+ $(type+'Part').value='';$(type+'Amt').value='';save();
+}
+function removeEntry(id){if(confirm('Delete this entry?')){state.entries=state.entries.filter(x=>x.id!==id);save()}}
+function render(){
+ const rows=state.entries.filter(x=>!filterDate||x.date===filterDate);
+ for(const [type,target] of [['INCOME','incomeRecords'],['EXPENSE','expenseRecords']]){
+  const list=$(target);list.innerHTML='';
+  const subset=rows.filter(x=>x.type===type).sort((a,b)=>b.id-a.id);
+  if(!subset.length){list.innerHTML='<div class="empty">No entries for this date</div>';continue}
+  subset.forEach(x=>{
+   const d=document.createElement('div');d.className='record';
+   const left=document.createElement('div');left.textContent=x.part;
+   const small=document.createElement('small');small.textContent=x.date.split('-').reverse().join('-');left.appendChild(small);
+   const right=document.createElement('div');const strong=document.createElement('strong');strong.textContent=fmt(x.amount);
+   const del=document.createElement('button');del.className='del';del.textContent='×';del.title='Delete';del.onclick=()=>removeEntry(x.id);
+   right.append(strong,del);d.append(left,right);list.appendChild(d);
+  });
+ }
+ const income=rows.filter(x=>x.type==='INCOME').reduce((s,x)=>s+x.amount,0);
+ const expense=rows.filter(x=>x.type==='EXPENSE').reduce((s,x)=>s+x.amount,0);
+ $('sOpening').textContent=fmt(state.opening);$('sIncome').textContent=fmt(income);$('sExpense').textContent=fmt(expense);$('sBalance').textContent=fmt(Number(state.opening)+income-expense);
+}
+$('addIncome').onclick=()=>add('income');$('addExpense').onclick=()=>add('expense');
+$('saveOpening').onclick=()=>{const v=Number($('opening').value||0);if(!Number.isFinite(v)){alert('Enter a valid opening balance');return}state.opening=v;save();alert('Opening balance saved')};
+$('entryDate').onchange=()=>{filterDate=$('entryDate').value||today();render()};
+$('allDates').onclick=()=>{filterDate='';render()};
+$('print').onclick=()=>window.print();
+$('csv').onclick=()=>{
+ const data=[['Date','Type','Particulars','Amount'],...state.entries.map(x=>[x.date,x.type,x.part,x.amount])];
+ const csv=data.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');
+ const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='Bahi_Khata_Entries.csv';a.click();URL.revokeObjectURL(url);
+};
+render();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
